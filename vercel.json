@@ -8,18 +8,6 @@
   },
   "routes": [
     {
-      "src": "/assets/(.*)",
-      "handle": "filesystem"
-    },
-    {
-      "src": "/favicon.ico",
-      "handle": "filesystem"
-    },
-    {
-      "src": "/robots.txt",
-      "handle": "filesystem"
-    },
-    {
       "src": "/(.*)",
       "dest": "/api/index.php"
     }
