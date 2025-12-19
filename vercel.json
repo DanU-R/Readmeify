@@ -5,6 +5,7 @@
         "api/index.php": { "runtime": "vercel-php@0.7.2" }
     },
     "routes": [
+        { "handle": "filesystem" },
         {
             "src": "/(.*)",
             "dest": "/api/index.php"
@@ -13,7 +14,7 @@
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "true",
-        "APP_URL": "https://nama-project-anda.vercel.app",
+        "APP_URL": "https://readmeify-coral.vercel.app",
         "APP_CONFIG_CACHE": "/tmp/config.php",
         "APP_EVENTS_CACHE": "/tmp/events.php",
         "APP_PACKAGES_CACHE": "/tmp/packages.php",
