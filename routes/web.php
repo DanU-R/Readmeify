@@ -29,3 +29,8 @@ Route::middleware('auth')->group(function () {
     // Commit Readme
     Route::post('/commit-readme', [GeneratorController::class, 'commit'])->name('commit.readme');
 });
+
+Route::get('/migrate-db', function() {
+    \Illuminate\Support\Facades\Artisan::call('migrate --force');
+    return 'Database Berhasil Dimigrasi! 🚀';
+});
