@@ -6,11 +6,11 @@
     },
     "routes": [
         {
-            "src": "/(build|assets|storage)/.*",
+            "src": "/(assets|build|storage|css|js|images)/.*",
             "handle": "filesystem"
         },
         {
-            "src": "/.*\\.(js|css|png|jpg|jpeg|svg|gif|ico|json|txt|xml)",
+            "src": "/(favicon.ico|robots.txt)",
             "handle": "filesystem"
         },
         {
