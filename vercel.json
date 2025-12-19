@@ -6,18 +6,10 @@
       "runtime": "vercel-php@0.7.2"
     }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(build|assets|storage)/.*",
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*\\.(js|css|png|jpg|jpeg|svg|gif|ico|webp|json|txt|xml)",
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index.php"
+      "source": "/(?!assets/|build/|storage/|.*\\.(css|js|png|jpg|jpeg|svg|gif|ico|webp|json|txt|xml)$)(.*)",
+      "destination": "/api/index.php"
     }
   ],
   "env": {
