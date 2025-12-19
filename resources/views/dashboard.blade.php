@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Readmeify</title>
-    <link rel="icon" href="{{ asset('assets/logo.png') }}">
+    <link rel="icon" href="{{ secure_asset('assets/logo.png') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -29,7 +29,7 @@
     <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
 
         <div class="flex items-center gap-3">
-            <img src="{{ asset('assets/logo.png') }}" 
+            <img src="{{ secure_asset('assets/logo.png') }}" 
                  alt="Logo Readmeify" 
                  class="w-10 h-10 object-contain group-hover:scale-110 transition-transform">
             <span class="text-xl font-extrabold tracking-tight">

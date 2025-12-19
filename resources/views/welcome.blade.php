@@ -5,7 +5,7 @@
     <title>Readmeify – Generator README AI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-    <link rel="icon" href="{{ asset('assets/logo.png') }}">
+    <link rel="icon" href="{{ secure_asset('assets/logo.png') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,7 +64,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex justify-between items-center">
         <a href="/" class="flex items-center gap-3 group">
             
-            <img src="{{ asset('assets/logo.png') }}" 
+            <img src="{{ secure_asset('assets/logo.png') }}" 
                  alt="Logo Readmeify" 
                  class="w-10 h-10 object-contain group-hover:scale-110 transition-transform">
 
