@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview README - {{ $repo }}</title>
-    <link rel="icon" href="{{ secure_asset('assets/logo.png') }}">
+    <link rel="icon" href="{{ asset('assets/logo.png') }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>

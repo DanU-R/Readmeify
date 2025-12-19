@@ -5,50 +5,22 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-/*
-|--------------------------------------------------------------------------
-| Early Static File Handling (WAJIB UNTUK ASSET)
-|--------------------------------------------------------------------------
-*/
-$uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
-$publicPath = __DIR__ . $uri;
-
-if ($uri !== '/' && file_exists($publicPath) && is_file($publicPath)) {
-    header('Content-Type: ' . mime_content_type($publicPath));
-    readfile($publicPath);
-    exit;
-}
-
-/*
-|--------------------------------------------------------------------------
-| Maintenance Mode
-|--------------------------------------------------------------------------
-*/
+// Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Autoloader
-|--------------------------------------------------------------------------
-*/
+// Register the Composer autoloader...
 require __DIR__.'/../vendor/autoload.php';
 
-/*
-|--------------------------------------------------------------------------
-| Bootstrap Laravel
-|--------------------------------------------------------------------------
-*/
+// Bootstrap Laravel and handle the request...
+/** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
-/*
-|--------------------------------------------------------------------------
-| Handle Request (CARA BENAR)
-|--------------------------------------------------------------------------
-*/
-$request = Request::capture();
-$response = $app->handle($request);
-$response->send();
+$app->handleRequest(Request::capture());
 
-$app->terminate($request, $response);
+$path = public_path(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+
+if (file_exists($path) && is_file($path)) {
+    return readfile($path);
+}
