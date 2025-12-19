@@ -31,6 +31,11 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/migrate-db', function() {
-    \Illuminate\Support\Facades\Artisan::call('migrate --force');
-    return 'Database Berhasil Dimigrasi! 🚀';
+    // Pakai 'migrate:fresh' untuk menghapus tabel macet dan ulang dari 0
+    \Illuminate\Support\Facades\Artisan::call('migrate:fresh --force');
+    
+    // Opsional: Jalankan seeder jika ada (biar tabel tidak kosong melompong)
+    // \Illuminate\Support\Facades\Artisan::call('db:seed --force');
+    
+    return 'Database Berhasil Di-reset (Fresh) dan Dimigrasi Ulang! 🚀';
 });
