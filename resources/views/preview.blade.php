@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preview README - {{ $repo }}</title>
+    <link rel="icon" href="{{ asset('assets/logo.png') }}">
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -13,22 +13,17 @@
         }
     </script>
 
-    <!-- Markdown & Highlight -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <!-- Highlight.js (Dark friendly) -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 
-    <!-- GitHub Markdown -->
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
 
-    <!-- SweetAlert -->
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-    <!-- ================= FIX CODE BLOCK ================= -->
     <style>
         /* Markdown container */
         .markdown-body {
@@ -81,7 +76,6 @@
 
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen pb-28 transition-colors">
 
-<!-- ================= HEADER ================= -->
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
 
@@ -96,25 +90,23 @@
         </div>
 
         <div class="flex items-center gap-4">
-            <!-- Language Switch -->
             <div class="flex gap-2">
                 <a href="{{ route('generate.readme', ['owner'=>$owner,'repo'=>$repo,'lang'=>'en']) }}"
                    class="px-3 py-1 rounded-lg text-sm font-semibold
                    {{ request('lang','en')==='en'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700' }}">
+                       ? 'bg-indigo-600 text-white'
+                       : 'bg-gray-200 dark:bg-gray-700' }}">
                     EN
                 </a>
                 <a href="{{ route('generate.readme', ['owner'=>$owner,'repo'=>$repo,'lang'=>'id']) }}"
                    class="px-3 py-1 rounded-lg text-sm font-semibold
                    {{ request('lang')==='id'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-gray-200 dark:bg-gray-700' }}">
+                       ? 'bg-indigo-600 text-white'
+                       : 'bg-gray-200 dark:bg-gray-700' }}">
                     ID
                 </a>
             </div>
 
-            <!-- Dark Mode Toggle -->
             <button id="darkToggle"
                 class="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-sm font-bold">
                 🌙
@@ -127,10 +119,8 @@
         </div>
     </div>
 
-    <!-- ================= MAIN ================= -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[calc(100vh-240px)]">
 
-        <!-- Editor -->
         <div class="flex flex-col h-full">
             <label class="text-sm font-bold mb-2">Markdown Source</label>
             <textarea id="source"
@@ -141,7 +131,6 @@
             </textarea>
         </div>
 
-        <!-- Preview -->
         <div class="flex flex-col h-full">
             <label class="text-sm font-bold mb-2">Live Preview</label>
             <div id="preview"
@@ -152,7 +141,6 @@
     </div>
 </div>
 
-<!-- ================= FOOTER ================= -->
 <div class="fixed bottom-0 left-0 w-full bg-white dark:bg-gray-800 border-t p-4 shadow z-50">
     <div class="max-w-7xl mx-auto flex justify-end gap-4">
 
@@ -168,14 +156,13 @@
             <input type="hidden" name="readme_content" id="hiddenContent">
 
             <button onclick="commitReadme(event)"
-                class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-bold">
-                🚀 Commit
+                class="px-6 py-2 rounded-lg bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition">
+                🚀 Commit to GitHub
             </button>
         </form>
     </div>
 </div>
 
-<!-- ================= SCRIPTS ================= -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -206,18 +193,73 @@
     // Copy
     function copyText() {
         navigator.clipboard.writeText(source.value);
-        Swal.fire({ icon:'success', title:'Copied', timer:1000, showConfirmButton:false });
+        const isDark = document.documentElement.classList.contains('dark');
+        Swal.fire({ 
+            icon: 'success', 
+            title: 'Copied', 
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false, 
+            timer: 2000,
+            background: isDark ? '#1f2937' : '#fff',
+            color: isDark ? '#fff' : '#000'
+        });
     }
 
-    // Commit
+    // --- PROFESSIONAL COMMIT ANIMATION ---
     function commitReadme(e) {
         e.preventDefault();
+        
+        // Transfer content
         document.getElementById('hiddenContent').value = source.value;
-        Swal.fire({ title:'Committing...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
-        document.getElementById('commitForm').submit();
+        
+        // Detect Dark Mode for SweetAlert styling
+        const isDark = document.documentElement.classList.contains('dark');
+
+        let timerInterval;
+        
+        Swal.fire({
+            title: '🚀 Deploying to GitHub',
+            html: '<span id="loading-text" class="text-lg font-medium">Initializing connection...</span>',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            background: isDark ? '#1f2937' : '#fff',
+            color: isDark ? '#e5e7eb' : '#1f2937',
+            didOpen: () => {
+                Swal.showLoading();
+                
+                // Text Animation Steps
+                const steps = [
+                    '🔐 Authenticating with GitHub...',
+                    '📦 Packaging README.md...',
+                    '📡 Analyzing Repository...',
+                    '✨ Pushing Commit...',
+                    '✅ Finalizing...'
+                ];
+                let stepIndex = 0;
+                const textContainer = Swal.getHtmlContainer().querySelector('#loading-text');
+
+                timerInterval = setInterval(() => {
+                    if (stepIndex < steps.length) {
+                        textContainer.innerText = steps[stepIndex];
+                        // Add nice fade effect color change
+                        textContainer.style.color = isDark ? '#818cf8' : '#4f46e5'; 
+                        stepIndex++;
+                    }
+                }, 800); 
+            },
+            willClose: () => {
+                clearInterval(timerInterval);
+            }
+        });
+
+        // Delay submission to allow animation to play
+        setTimeout(() => {
+            document.getElementById('commitForm').submit();
+        }, 3000);
     }
 
-    // Dark mode
+    // Dark mode logic
     const toggle = document.getElementById('darkToggle');
     toggle.onclick = () => {
         document.documentElement.classList.toggle('dark');

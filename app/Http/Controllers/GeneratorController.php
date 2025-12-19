@@ -13,8 +13,7 @@ class GeneratorController extends Controller
         $user = Auth::user();
         $techStack = [];
 
-        // --- BAGIAN 1: MATA-MATA (SCANNING) ---
-        // Kita scan file kunci untuk menentukan bahasa pemrograman
+        // --- BAGIAN 1: SCANNING ---
         
         $makeRequest = function($path) use ($user, $owner, $repo) {
             return Http::withToken($user->github_token)
@@ -22,78 +21,77 @@ class GeneratorController extends Controller
                 ->get("https://api.github.com/repos/{$owner}/{$repo}/{$path}");
         };
 
-        // 1. Cek File Dependency (PHP, JS, Python, Golang)
+        // 1. Cek File Dependency
         $filesToCheck = [
-            'contents/composer.json', // PHP
-            'contents/package.json',  // JS/Node
-            'contents/requirements.txt', // Python
-            'contents/go.mod', // Go
-            'contents/Gemfile', // Ruby
+            'contents/composer.json', 
+            'contents/package.json',  
+            'contents/requirements.txt', 
         ];
         
         foreach ($filesToCheck as $file) {
             $res = $makeRequest($file);
             if ($res->successful()) {
                 $content = base64_decode($res->json()['content']);
-                // Ambil keyword teknologi dari file dependency
                 preg_match_all('/"([^"]+)"\s*:/', $content, $matches); 
                 if (!empty($matches[1])) $techStack = array_merge($techStack, array_slice($matches[1], 0, 15));
             }
         }
 
-        // 2. Cek Bahasa Utama dari GitHub
+        // 2. Cek Bahasa Utama
         $languages = $makeRequest('languages');
         if ($languages->successful()) {
             $techStack = array_merge($techStack, array_keys($languages->json()));
         }
 
-        // Bersihkan duplikat
         $techStackList = implode(', ', array_unique($techStack));
         
-        // --- LOGIKA CERDAS: DETEKSI FRAMEWORK ---
-        // Kita tentukan instruksi instalasi berdasarkan apa yang ditemukan
+        // --- LOGIKA INSTALLATION (DESKRIPTIF + KODE) ---
+        // Perbaikan: Kita minta AI menulis Deskripsi DULU, baru Kode.
         
-        $installInstruction = "Analyze the tech stack ({$techStackList}) and provide the standard, best-practice installation steps for this specific technology.";
+        $installInstruction = "Provide standard installation steps.";
 
-        // Cek apakah ini Laravel?
         if (str_contains(strtolower($techStackList), 'laravel')) {
-            $installInstruction = "Since this is a **Laravel** project, you MUST include specific steps:
-            1. `cp .env.example .env` (Environment Setup)
-            2. `composer install` (Dependencies)
-            3. `php artisan key:generate`
-            4. `php artisan migrate` (Database)
-            5. `npm install && npm run build` (Assets)
-            6. `php artisan serve`";
+            $installInstruction = "This is a **Laravel** project. Generate a detailed installation guide.
+            
+            Structure each step like this:
+            1. **Step Title**: Brief explanation of WHY this step is needed.
+            2. Code Block (bash).
+
+            REQUIRED STEPS:
+            1. **Clone Repository**: Explain cloning.
+               (Command: git clone https://github.com/{$owner}/{$repo}.git)
+            
+            2. **Install Dependencies**: Explain that we need to install PHP and JS libraries.
+               (Command: composer install && npm install)
+            
+            3. **Environment Setup**: Explain copying .env file for database credentials.
+               (Command: cp .env.example .env)
+            
+            4. **Key & Database**: Explain generating app key and migrating DB.
+               (Command: php artisan key:generate && php artisan migrate)
+            
+            5. **Serve**: Explain how to start the app.
+               (Command: npm run build && php artisan serve)";
         } 
-        // Cek apakah ini Node.js / React / Vue?
-        elseif (str_contains(strtolower($techStackList), 'react') || str_contains(strtolower($techStackList), 'vue') || str_contains(strtolower($techStackList), 'next.js') || str_contains(strtolower($techStackList), 'express')) {
-            $installInstruction = "Since this is a **Node.js/JavaScript** project, you MUST include specific steps:
-            1. `npm install` or `yarn install`
-            2. Environment setup (.env) if applicable
-            3. `npm run dev` or `npm start` to run the server.";
-        }
-        // Cek apakah ini Python / Django / Flask?
-        elseif (str_contains(strtolower($techStackList), 'django') || str_contains(strtolower($techStackList), 'flask') || str_contains(strtolower($techStackList), 'python')) {
-            $installInstruction = "Since this is a **Python** project, you MUST include specific steps:
-            1. Create a virtual environment (`python -m venv venv` and `source venv/bin/activate`)
-            2. `pip install -r requirements.txt`
-            3. Database migrations (if Django: `python manage.py migrate`)
-            4. Run server (`python manage.py runserver` or `flask run`).";
+        elseif (str_contains(strtolower($techStackList), 'node') || str_contains(strtolower($techStackList), 'react') || str_contains(strtolower($techStackList), 'vue')) {
+            $installInstruction = "This is a **Node.js** project. Generate detailed steps:
+            1. **Clone**: Explain cloning.
+            2. **Install**: Explain installing NPM packages (Command: npm install).
+            3. **Run**: Explain starting the dev server (Command: npm run dev).";
         }
 
-        // --- LOGIKA BAHASA (ID/EN) ---
+        // --- LOGIKA BAHASA ---
         $lang = $request->query('lang', 'en'); 
         $languageInstruction = "Write the README entirely in English.";
         if ($lang === 'id') {
-            $languageInstruction = "IMPORTANT: Write the entire README in INDONESIAN LANGUAGE (Bahasa Indonesia). Use formal, professional tone. However, keep technical commands (like 'composer install', 'npm run dev') in English/Code.";
+            $languageInstruction = "IMPORTANT: Write the entire README in INDONESIAN LANGUAGE (Bahasa Indonesia). Use formal, professional tone. However, keep technical commands in English.";
         }
         
-        // --- BAGIAN 2: OTAK AI (OPENAI) ---
+        // --- BAGIAN 2: OTAK AI ---
 
         $model = "gpt-4o-mini"; 
         $apiKey = env('OPENAI_API_KEY');
         
-        // Prompt Dinamis
         $prompt = "Act as a Senior Open Source Maintainer. Write a visually stunning GitHub README.md for a project named '{$repo}'. 
         
         The project uses these technologies: {$techStackList}.
@@ -101,17 +99,11 @@ class GeneratorController extends Controller
         LANGUAGE REQUIREMENT:
         {$languageInstruction}
         
-        RULES FOR VISUALS:
-        1. **Badges:** You MUST use Shields.io badges for the tech stack.
-        2. **Layout:** Center-align the Project Title and Description.
-        3. **Icons:** Use Emojis for all section headers.
-        
         Structure the README exactly like this:
         
         <div align='center'>
            <h1>{$repo}</h1>
            <p>A short, catchy slogan for the project.</p>
-           
            <p>
               <img src='https://img.shields.io/github/last-commit/{$owner}/{$repo}?style=for-the-badge&logo=github&color=blue' alt='Last Commit'>
               <img src='https://img.shields.io/github/license/{$owner}/{$repo}?style=for-the-badge&logo=github&color=green' alt='License'>
@@ -124,19 +116,18 @@ class GeneratorController extends Controller
 
         ## 🚀 Key Features
         * ✅ **Feature 1:** Description
-        * ✅ **Feature 2:** Description
-        (Invent 4-5 features based on the tech stack: {$techStackList})
+        (Invent 4-5 features based on: {$techStackList})
 
         ## 🛠️ Tech Stack
-        [List the technologies using Shields.io Badges 'for-the-badge' style.]
+        [List technologies using Shields.io Badges]
 
         ## ⚙️ Installation
-        Provide a step-by-step guide to set up this project locally.
+        Provide a step-by-step guide.
+        {$installInstruction}
         
-        INSTALLATION RULES FOR THIS PROJECT:
-        {$installInstruction} 
-
-        IMPORTANT: You MUST wrap all command line instructions in code blocks with the correct language identifier (bash, python, etc.).
+        IMPORTANT RULE FOR INSTALLATION: 
+        - You MUST provide a short text description BEFORE every code block. Do not just list code blocks.
+        - Use TRIPLE BACKTICK CODE BLOCKS (```bash) for commands.
 
         ## 🤝 Contributing
         Contributions are welcome!
@@ -144,9 +135,8 @@ class GeneratorController extends Controller
         ## 📄 License
         This project is licensed under the MIT License.
         
-        IMPORTANT: Return ONLY the raw Markdown content. Do NOT use code blocks (```markdown).";
+        IMPORTANT: Return ONLY the raw Markdown content.";
 
-        // Request ke OpenAI
         $response = Http::withToken($apiKey)
             ->withoutVerifying()
             ->post('https://api.openai.com/v1/chat/completions', [
@@ -158,29 +148,18 @@ class GeneratorController extends Controller
                 'temperature' => 0.7,
             ]);
 
-        // Cek Error
         if ($response->failed()) {
-            dd([
-                'error' => 'Gagal koneksi ke OpenAI',
-                'status' => $response->status(),
-                'body' => $response->json()
-            ]);
+            dd($response->json());
         }
 
         $generatedReadme = $response->json()['choices'][0]['message']['content'];
 
-        // --- PEMBERSIH CERDAS ---
+        // Pembersih
         $lines = explode("\n", $generatedReadme);
-        
-        if (isset($lines[0]) && (str_contains($lines[0], '```markdown') || str_contains($lines[0], '```'))) {
-            array_shift($lines);
-        }
-        if (isset($lines[count($lines)-1]) && trim($lines[count($lines)-1]) === '```') {
-            array_pop($lines);
-        }
+        if (isset($lines[0]) && (str_contains($lines[0], '```markdown') || str_contains($lines[0], '```'))) array_shift($lines);
+        if (isset($lines[count($lines)-1]) && trim($lines[count($lines)-1]) === '```') array_pop($lines);
         $generatedReadme = implode("\n", $lines);
         
-        // Tampilkan Hasil
         return view('preview', [
             'readme' => $generatedReadme,
             'owner' => $owner,
@@ -191,22 +170,32 @@ class GeneratorController extends Controller
     public function commit(Request $request)
     {
         $user = Auth::user();
-        $owner = $request->owner;
-        $repo = $request->repo;
-        $content = $request->readme_content;
+        
+        // 1. Validasi Input (Mencegah URL kosong)
+        $owner = $request->input('owner');
+        $repo = $request->input('repo');
+        $content = $request->input('readme_content');
+
+        if (empty($owner) || empty($repo) || empty($content)) {
+            return back()->with('error', 'Data repository tidak lengkap. Silakan generate ulang.');
+        }
+
         $message = "docs: update README.md via Readmeify ✨";
 
-        $checkUrl = "https://api.github.com/repos/{$owner}/{$repo}/contents/README.md";
-        
+        // 2. Definisi URL (Ditulis ulang manual agar bersih)
+        $targetUrl = "https://api.github.com/repos/" . $owner . "/" . $repo . "/contents/README.md";
+
+        // 3. Cek File Lama
         $checkResponse = Http::withToken($user->github_token)
             ->withoutVerifying()
-            ->get($checkUrl);
+            ->get($targetUrl);
 
         $sha = null;
         if ($checkResponse->successful()) {
             $sha = $checkResponse->json()['sha']; 
         }
 
+        // 4. Siapkan Data
         $data = [
             'message' => $message,
             'content' => base64_encode($content),
@@ -216,9 +205,10 @@ class GeneratorController extends Controller
             $data['sha'] = $sha;
         }
 
+        // 5. Eksekusi PUT
         $response = Http::withToken($user->github_token)
             ->withoutVerifying()
-            ->put($checkUrl, $data);
+            ->put($targetUrl, $data);
 
         if ($response->successful()) {
             return redirect()->route('dashboard')->with('success', "Berhasil! README.md di repo {$repo} sudah terupdate! 🚀");

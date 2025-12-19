@@ -4,48 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard – Readmeify</title>
+    <link rel="icon" href="{{ asset('assets/logo.png') }}">
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Tailwind Dark Mode Config -->
     <script>
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
 
-    <!-- SweetAlert -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
 <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100
              dark:from-gray-900 dark:via-gray-950 dark:to-gray-900
              text-gray-800 dark:text-gray-200 min-h-screen transition-colors">
 
-<!-- ================= NAVBAR ================= -->
 <nav class="bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b
             border-gray-200 dark:border-gray-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
 
-        <!-- Logo -->
         <div class="flex items-center gap-3">
-            <img src="{{ asset('assets/logo.png') }}"
-                 alt="Readmeify Logo"
-                 class="w-9 h-9 object-contain">
+            <img src="{{ asset('assets/logo.png') }}" 
+                 alt="Logo Readmeify" 
+                 class="w-10 h-10 object-contain group-hover:scale-110 transition-transform">
             <span class="text-xl font-extrabold tracking-tight">
                 Readmeify
             </span>
         </div>
 
-        <!-- Right -->
         <div class="flex items-center gap-5">
-            <span class="text-sm text-gray-600 dark:text-gray-400">
+            <span class="text-sm text-gray-600 dark:text-gray-400 hidden sm:inline-block">
                 Halo, <strong>{{ $user->name }}</strong>
             </span>
 
-            <!-- Dark Mode Toggle -->
             <button id="themeToggle"
                 class="w-9 h-9 flex items-center justify-center rounded-lg
                        bg-gray-100 dark:bg-gray-800 hover:scale-105 transition">
@@ -62,7 +58,6 @@
     </div>
 </nav>
 
-<!-- ================= HERO ================= -->
 <section class="relative overflow-hidden">
     <div class="absolute inset-0 bg-gradient-to-r
                 from-indigo-500/10 to-purple-500/10"></div>
@@ -98,10 +93,8 @@
     </div>
 </section>
 
-<!-- ================= CONTENT ================= -->
 <section class="max-w-7xl mx-auto px-6 py-12">
 
-    <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center
                 md:justify-between gap-4 mb-8">
         <h2 class="text-2xl font-bold">
@@ -117,7 +110,6 @@
                    focus:ring-2 focus:ring-indigo-500 outline-none transition">
     </div>
 
-    <!-- Skeleton Loader -->
     <div id="repo-skeleton" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
         @for ($i = 0; $i < 6; $i++)
             <div class="animate-pulse bg-white dark:bg-gray-900
@@ -131,7 +123,6 @@
         @endfor
     </div>
 
-    <!-- Repo Grid -->
     <div id="repo-grid"
          class="hidden grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
@@ -153,16 +144,16 @@
                         </span>
 
                         <div class="text-xs text-gray-400 flex gap-2">
-                            ⭐ {{ $repo['stargazers_count'] }}
-                            🍴 {{ $repo['forks_count'] }}
+                            <span>⭐ {{ $repo['stargazers_count'] }}</span>
+                            <span>🍴 {{ $repo['forks_count'] }}</span>
                         </div>
                     </div>
 
-                    <h3 class="text-lg font-bold mb-2 truncate">
+                    <h3 class="text-lg font-bold mb-2 truncate" title="{{ $repo['name'] }}">
                         {{ $repo['name'] }}
                     </h3>
 
-                    <p class="text-sm text-gray-600 dark:text-gray-400 min-h-[48px]">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 min-h-[48px] line-clamp-2">
                         {{ $repo['description'] ?? 'Tidak ada deskripsi repository.' }}
                     </p>
 
@@ -195,7 +186,6 @@
     </div>
 </section>
 
-<!-- ================= SCRIPT ================= -->
 <script>
     /* Skeleton */
     window.addEventListener('load', () => {
@@ -211,27 +201,104 @@
         });
     });
 
-    /* Dark Mode */
+    /* Dark Mode Logic */
     const toggle = document.getElementById('themeToggle');
     const html = document.documentElement;
+
+    function applyTheme(isDark) {
+        if (isDark) {
+            html.classList.add('dark');
+            toggle.innerHTML = '☀️';
+        } else {
+            html.classList.remove('dark');
+            toggle.innerHTML = '🌙';
+        }
+    }
 
     if (localStorage.theme === 'dark' ||
         (!('theme' in localStorage) &&
         window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        html.classList.add('dark');
+        applyTheme(true);
+    } else {
+        applyTheme(false);
     }
 
     toggle.onclick = () => {
-        html.classList.toggle('dark');
-        localStorage.theme = html.classList.contains('dark') ? 'dark' : 'light';
+        const isDark = html.classList.toggle('dark');
+        localStorage.theme = isDark ? 'dark' : 'light';
+        applyTheme(isDark);
     };
 
-    /* Alerts */
+    /* ----------------------------------------------------
+       PROFESSIONAL SUCCESS ALERT (DENGAN EFEK CONFETTI)
+       ---------------------------------------------------- */
     @if(session('success'))
-        Swal.fire({ icon:'success', title:'Berhasil 🎉', text:"{!! session('success') !!}", timer:4000, showConfirmButton:false });
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 1. Jalankan Efek Confetti (Kembang Api Kertas)
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+            function randomInOut(min, max) {
+              return Math.random() * (max - min) + min;
+            }
+
+            var interval = setInterval(function() {
+              var timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              var particleCount = 50 * (timeLeft / duration);
+              // Confetti dari kiri dan kanan
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInOut(0.1, 0.3), y: Math.random() - 0.2 } }));
+              confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInOut(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+
+            // 2. Tampilkan SweetAlert Profesional
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            Swal.fire({
+                title: '<span class="text-2xl font-bold text-indigo-600">Deployment Sukses! 🚀</span>',
+                html: `
+                    <div class="mt-2">
+                        <p class="text-gray-600 dark:text-gray-300 text-base">
+                            README.md repository Anda telah berhasil diperbarui.
+                        </p>
+                        <div class="mt-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border border-green-200 dark:border-green-800 flex items-center justify-center gap-2">
+                            <span class="text-green-600 dark:text-green-400 font-semibold text-sm">
+                                ✅ Commit Hash Verified
+                            </span>
+                        </div>
+                    </div>
+                `,
+                icon: null, // Kita pakai custom HTML di atas
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#ffffff' : '#1f2937',
+                confirmButtonText: 'Mantap, Terima Kasih!',
+                confirmButtonColor: '#4f46e5', // Indigo 600
+                backdrop: `
+                    rgba(0,0,123,0.1)
+                    left top
+                    no-repeat
+                `,
+                customClass: {
+                    popup: 'rounded-2xl shadow-2xl p-6'
+                }
+            });
+        });
     @endif
+
+    /* Error Alert */
     @if(session('error'))
-        Swal.fire({ icon:'error', title:'Gagal 😔', text:"{!! session('error') !!}" });
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: "{!! session('error') !!}",
+            confirmButtonColor: '#ef4444'
+        });
     @endif
 </script>
 
