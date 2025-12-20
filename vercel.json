@@ -6,12 +6,12 @@
     },
     "routes": [
         {
-            "src": "/(assets|build|storage|css|js|images|favicon.ico|robots.txt)",
-            "dest": "/$0"
+            "src": "/(assets|build|storage|css|js|images)/.*",
+            "handle": "filesystem"
         },
         {
-            "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
-            "dest": "/$0"
+            "src": "/(favicon\\.ico|robots\\.txt)",
+            "handle": "filesystem"
         },
         {
             "src": "/(.*)",
@@ -22,8 +22,15 @@
         "APP_ENV": "production",
         "APP_DEBUG": "true",
         "APP_URL": "https://readmeify-coral.vercel.app",
-        "LOG_CHANNEL": "stderr",
+        "APP_CONFIG_CACHE": "/tmp/config.php",
+        "APP_EVENTS_CACHE": "/tmp/events.php",
+        "APP_PACKAGES_CACHE": "/tmp/packages.php",
+        "APP_ROUTES_CACHE": "/tmp/routes.php",
+        "APP_SERVICES_CACHE": "/tmp/services.php",
+        "VIEW_COMPILED_PATH": "/tmp",
+        "CACHE_DRIVER": "array",
         "SESSION_DRIVER": "cookie",
-        "CACHE_DRIVER": "array"
+        "QUEUE_CONNECTION": "sync",
+        "LOG_CHANNEL": "stderr"
     }
 }
